@@ -311,7 +311,7 @@ table tbody tr:nth-child(even) {
  *****************************************************************************/
 .remark-code * {
     background-color: #DCDCDC;
-    font-size: 21.4px;
+    font-size: 18px;
 }
 .remark-code-line {
     padding-left: 13.4px;
@@ -376,8 +376,12 @@ table tbody tr:nth-child(even) {
     width: 100%;
 }
 
+.vert img {
+    width: 35%
+}
+
 .half img {
-    width: 60%
+    width: 50%
 }
 
 .sixty img {

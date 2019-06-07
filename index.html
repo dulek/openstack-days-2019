@@ -40,7 +40,7 @@ class: content_slide
 
 template: title_layout
 
-# OpenStack + Kubernetes + Docker
+# OpenStack + K8s + Containers
 
 ## But what does it actually mean?
 
@@ -59,17 +59,19 @@ template: agenda_layout
 --
 
 2. Projects overview
-   * Magnum
-   * Zun
    * Kolla
-     * Kolla-K8s
    * LOCI
    * OpenStack-Helm
+     * Kolla-Kubernetes
+   * Zun
+   * Magnum
+   * Kuryr
    * OpenStack Cloud Provider
      * Fuxi
-   * Kuryr
 
 --
+
+
 
 Slides available at: **https://dulek.github.io/openstack-days-2019/**
 
@@ -78,6 +80,776 @@ Slides available at: **https://dulek.github.io/openstack-days-2019/**
 template: section_layout
 
 OpenStack, Docker and K8s integration use cases
+
+---
+
+# OpenStack in 2014
+## Paris Summit
+
+--
+
+<iframe width="100%" height="70%" src="https://www.youtube.com/embed/Z47i1KAYxNo?controls=0&amp;start=73" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+---
+
+# OpenStack in 2014
+## Paris Summit
+
+.center[.sixty[![Insert graphic here](assets/paris01.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris03.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.vert[![Insert graphic here](assets/paris02.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris04.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.vert[![Insert graphic here](assets/paris05.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris06.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris07.JPG)]]
+
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris08.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris10.JPG)]]
+
+---
+
+# OpenStack in 2014
+## Paris Summit - Musée des Arts Forains
+
+.center[.sixty[![Insert graphic here](assets/paris11.JPG)]]
+
+---
+
+# OpenStack in 2014
+
+--
+
+.center[.half[![Insert graphic here](assets/byzantine.svg)]]
+
+---
+
+# Types of use cases
+
+--
+
+.left-column[
+.center[.eighty[![Insert graphic here](assets/openstack-on-k8s.png)]]
+
+]
+
+--
+
+.right-column[
+.center[.eighty[![Insert graphic here](assets/k8s-on-openstack.png)]]
+
+]
+
+---
+
+# Types of use cases
+
+.left-column[
+.center[.eighty[![Insert graphic here](assets/openstack-on-k8s.png)]]
+
+.center[
+**Kolla, LOCI, Stackanetes, OpenStack-Helm**
+]
+]
+
+.right-column[
+.center[.eighty[![Insert graphic here](assets/k8s-on-openstack.png)]]
+
+.center[
+**Magnum, Kuryr, Zun, Fuxi**
+]
+]
+
+---
+
+template: section_layout
+
+.center[.sixty[![Insert graphic here](assets/openstack-on-k8s.png)]]
+
+---
+
+# Kolla
+
+## a.k.a. OpenStack containers
+
+.left-column[
+**Mission:** To provide production-ready containers and deployment tools for
+operating OpenStack clouds.
+
+**Git:**
+
+* [opendev.org/openstack/kolla](https://opendev.org/openstack/kolla)
+* [opendev.org/openstack/kolla-ansible](https://opendev.org/openstack/kolla-ansible)
+* [opendev.org/openstack/kolla-cli](https://opendev.org/openstack/kolla-cli)
+
+**Docs:** https://docs.openstack.org/kolla/latest/
+
+]
+
+.right-column[
+.center[.eighty[![Insert graphic here](assets/kolla.png)]]
+]
+
+---
+
+# Kolla
+## openstack/kolla - Dockerfiles and build infra
+
+* Has templated Dockerfiles for almost every OpenStack project
+  * Even as exotic as Vitrage (root cause analysis), Quinling (FaaS) or Blazar
+    (resource reservation)
+* `docker/` directory contains the dockerfiles.
+* Supports **Ubuntu**, **Debian**, **CentOS**, **RHEL**, **Oracle Linux**
+  * **Fedora** deprecated since Newton
+* Available on DockerHub (https://hub.docker.com/u/kolla)
+* Lots of layers
+* ~350 MB per container
+* openstack-base -> cinder-base -> cinder-scheduler
+
+---
+
+# Kolla
+## openstack/kolla - Dockerfiles and build infra
+
+```docker
+FROM {{ namespace }}/{{ image_prefix }}cinder-base:{{ tag }}
+
+{% block cinder_scheduler_header %}{% endblock %}
+
+{% import "macros.j2" as macros with context %}
+
+{% if install_type == 'binary' %}
+    {% if base_package_type == 'deb' %}
+        {% set cinder_scheduler_packages = [
+                'cinder-scheduler'
+        ] %}
+
+{{ macros.install_packages(cinder_scheduler_packages | customizable("packages")) }}
+
+    {% endif %}
+{% endif %}
+
+{% block cinder_scheduler_footer %}{% endblock %}
+{% block footer %}{% endblock %}
+
+USER cinder
+```
+
+---
+
+# Kolla
+## openstack/kolla - Dockerfiles and build infra
+
+```sh
+mdulko:~/ $ docker pull kolla/ubuntu-source-cinder-volume:master
+master: Pulling from kolla/ubuntu-source-cinder-volume
+6abc03819f3e: Pull complete
+05731e63f211: Pull complete
+0bd67c50d6be: Pull complete
+393f93080b1d: Pull complete
+40e453cf518d: Pull complete
+(30 lines skipped)
+7ff20edf70b1: Pull complete
+51fc316e6694: Pull complete
+6066f12b68b0: Pull complete
+f2edcb790295: Pull complete
+Digest: sha256:0d2d33ac157ec26d77d8ed47339a8f8c52c1bcdcecaa72e70e23c6a23d49dcc0
+Status: Downloaded newer image for kolla/ubuntu-source-cinder-volume:master
+docker.io/kolla/ubuntu-source-cinder-volume:master
+mdulko:~/ $ docker inspect 3b5ccf85a4c9 | grep Layers -A 200 | grep sha256 | wc -l
+40
+```
+
+---
+
+# Kolla
+## openstack/kolla-ansible - deployment tool
+
+* Uses ansible to deploy OpenStack in Kolla containers.
+* Vast support of OpenStack projects and third-party services
+  * Exotic projects like Tacker, Designate Zun or Qinling
+  * E.g. monitoring by ELK/EHK stack or Monasca
+  * Ceph
+
+---
+
+# LOCI
+## a.k.a. lightweight OpenStack containers
+
+.left-column[
+**Mission:** To provide CI/CD friendly, lightweight OCI compliant container
+tooling and images for OpenStack services.
+
+**Git:**
+
+* [opendev.org/openstack/loci](https://opendev.org/openstack/loci)
+]
+
+.right-column[
+.center[![Insert graphic here](assets/loci.png)]
+]
+
+---
+
+# LOCI
+## a.k.a. lightweight OpenStack containers
+
+
+* Just basic services
+  * Cinder, Glance, Heat, Horizon, Ironic, Keystone, Neutron, Nova, Octavia
+* Supports **Ubuntu**, **Debian**, **CentOS**, **OpenSUSE Leap**
+* Available on DockerHub (https://hub.docker.com/u/loci)
+* Less layers
+* ~135 MB per container
+* Building is pretty easy:
+```
+docker build https://opendev.org/openstack/loci.git \
+    --build-arg PROJECT=keystone \ 
+    --tag keystone:ubuntu
+```
+* Images are really minimal:
+```
+dulko:~/ $ docker run -it keystone:ubuntu   
+root@527bdab79e34:/# vi
+bash: vi: command not found
+```
+
+---
+
+# LOCI
+## a.k.a. lightweight OpenStack containers
+
+```bash
+mdulko:~/ $ docker pull loci/cinder:master-ubuntu
+master-ubuntu: Pulling from loci/cinder
+9ff7e2e5f967: Pull complete 
+59856638ac9f: Pull complete 
+6f317d6d954b: Pull complete 
+a9dde5e2a643: Pull complete 
+0b35549c7b48: Pull complete 
+cebfb03410ab: Pull complete 
+89eb357599f3: Pull complete 
+e73540b245b5: Pull complete 
+56d61ccf56f9: Pull complete 
+6338151ab826: Pull complete 
+4e43e61319c7: Pull complete 
+Digest: sha256:1c16445d933f73342c966d5cec2da886bfdfd2cb98eaea51311865421a01fd8d
+Status: Downloaded newer image for loci/cinder:master-ubuntu
+docker.io/loci/cinder:master-ubuntu
+mdulko:~/ $ docker inspect ec46ba6f1822 | grep Layers -A 200 | grep sha256 | wc -l
+11
+```
+
+---
+
+# OpenStack-Helm
+## OpenStack on K8s
+
+.left-column[
+**Mission:** To provide a collection of Helm charts that simply, resiliently,
+and flexibly deploy OpenStack and related services on Kubernetes.
+
+**Git:**
+
+* [opendev.org/openstack/openstack-helm](https://opendev.org/openstack/openstack-helm)
+* [opendev.org/openstack/openstack-helm-addons](https://opendev.org/openstack/openstack-helm-addons)
+* [opendev.org/openstack/openstack-helm-infra](https://opendev.org/openstack/openstack-helm-infra)
+* [opendev.org/openstack/openstack-helm-docs](https://opendev.org/openstack/openstack-helm-docs)
+* [opendev.org/openstack/openstack-helm-images](https://opendev.org/openstack/openstack-helm-images)
+
+**Docs:** https://docs.openstack.org/openstack-helm/latest/
+]
+
+.right-column[
+.center[![Insert graphic here](assets/helm.png)]
+]
+
+---
+
+# OpenStack-Helm
+## OpenStack on K8s
+
+* Provides Helm charts for OpenStack services, as well as third-party services
+  required to run OpenStack (RabbitMQ, MariaDB, etc.)
+  * **openstack/openstack-helm** - OpenStack services
+  * **openstack/openstack-helm-infra** - third-party services
+  * **openstack/openstack-helm-addons** - additional functionalities
+  * **openstack/openstack-helm-images** - non-standard dockerfiles used by OSH
+* Supports most basic OpenStack projects and some extra
+  * e.g. Mistral, Magnum, Congress, Barbican, Senlin
+  * no Octavia?
+* Initially backed by AT&T
+
+---
+# OpenStack-Helm
+## Helm chart
+
+**values.yaml**
+
+```yaml
+images:
+  tags:
+    db_init: docker.io/openstackhelm/heat:ocata-ubuntu_xenial
+    cinder_db_sync: docker.io/openstackhelm/cinder:ocata-ubuntu_xenial
+```
+```
+  replicas:
+    api: 1
+    volume: 1
+```
+```yaml
+  cinder:
+    DEFAULT:
+      resource_query_filters_file: /etc/cinder/resource_filters.json
+      log_config_append: /etc/cinder/logging.conf
+      use_syslog: false
+```
+
+---
+
+# OpenStack-Helm
+## Helm chart - templates
+
+```bash
+mdulko:templates/ (master) $ tree
+.
+├── bin
+│   ├── _bootstrap.sh.tpl
+├── configmap-etc.yaml
+├── deployment-api.yaml
+(...)
+├── job-ks-user.yaml
+├── job-rabbit-init.yaml
+├── job-storage-init.yaml
+(...)
+├── pvc-backup.yaml
+├── secret-db.yaml
+(...)
+├── service-api.yaml
+└── utils
+    ├── _ceph_volume_section_name.tpl
+
+```
+
+---
+
+# OpenStack-Helm
+## Helm chart - templates
+
+```yaml
+{{- $serviceAccountName := "cinder-scheduler" }}
+{{ tuple $envAll "scheduler" $serviceAccountName | include "helm-toolkit.snippets.kubernetes_pod_rbac_serviceaccount" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cinder-scheduler
+  annotations:
+    {{ tuple $envAll | include "helm-toolkit.snippets.release_uuid" }}
+  labels:
+{{ tuple $envAll "cinder" "scheduler" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 4 }}
+spec:
+  replicas: {{ .Values.pod.replicas.scheduler }}
+  selector:
+    matchLabels:
+{{ tuple $envAll "cinder" "scheduler" | include "helm-toolkit.snippets.kubernetes_metadata_labels" | indent 6 }}
+{{ tuple $envAll | include "helm-toolkit.snippets.kubernetes_upgrades_deployment" | indent 2 }}
+```
+
+---
+
+# OpenStack-Helm
+## Installation
+
+```bash
+#NOTE: Lint and package chart
+make cinder
+
+#NOTE: Deploy command
+tee /tmp/cinder.yaml <<EOF
+conf:
+  ceph:
+    pools:
+      backup:
+        replication: 1
+      volume:
+        replication: 1
+EOF
+helm upgrade --install cinder ./cinder \
+  --namespace=openstack \
+  --values=/tmp/cinder.yaml \
+    --set manifests.network_policy=true
+
+#NOTE: Wait for deploy
+./tools/deployment/common/wait-for-pods.sh openstack
+```
+
+---
+
+# OpenStack-Helm
+## Predecessors/Rivals
+
+### Stackanetes
+
+* Launched by CoreOS
+* Based on Kolla images, (formerly) Kolla-Mesos and Jinja 2 templates
+* Showcased at OpenStack Summit Austin, April 2016
+* Second version based on Kubernetes Package Manager (Helm's predecessor)
+* Discontinued, superseded by OpenStack-Helm
+
+### Kolla-Kubernetes
+
+* Kolla's team approach to deploying OpenStack on K8s using Helm.
+* Object of a great discussion in the community
+* Discontinued, superseded by OpenStack-Helm
+
+---
+
+# OpenStack-Helm
+## Kolla-Kubernetes example
+
+cinder-scheduler.yaml
+```
+{{- $searchPath := ":global.kolla.cinder.scheduler.statefulset:global.kolla.cinder.scheduler.all:global.kolla.cinder.all:global.kolla.all" }}
+{{- $c := dict "searchPath" $searchPath "Values" .Values }}
+{{- $_ := set $c "contName" "cinder-scheduler" }}
+{{- $_ := set $c "imageName" "image_full" }}
+{{- $_ := set $c "tagName" "image_tag" }}
+{{- $imageFull := include "kolla_build_image_full" $c }}
+{{- $resourceName := "cinder-scheduler" }}
+{{- $netHostTrue := false }}
+{{- $podTypeBootstrap := false }}
+{{- $serviceName := "cinder" }}
+{{- $serviceType := "scheduler" }}
+{{- $privileged := false }}
+{{- with $env := dict "imageFull" $imageFull "resourceName" $resourceName "netHostTrue" $netHostTrue "podTypeBootstrap" $podTypeBootstrap "serviceName" $serviceName "serviceType" $serviceType "privileged" $privileged "Values" .Values "Release" .Release "searchPath" $searchPath }}
+{{- include "common_statefulset" $env }}
+{{- end }}
+```
+
+---
+
+template: section_layout
+
+.center[.sixty[![Insert graphic here](assets/k8s-on-openstack.png)]]
+
+
+---
+
+# Magnum
+## Deploying COEs on OpenStack
+
+.left-column[
+**Mission:** To provide a set of services for provisioning, scaling, and
+managing <del>application containers</del> container orchestration engines <del>in a multi-tenant cloud environment</del>.
+
+**Git:**
+
+* [opendev.org/openstack/magnum](https://opendev.org/openstack/magnum)
+* [opendev.org/openstack/python-magnumclient](https://opendev.org/openstack/python-magnumclient)
+* [opendev.org/openstack/magnum-tempest-plugin](https://opendev.org/openstack/magnum-tempest-plugin)
+* [opendev.org/openstack/magnum-ui](https://opendev.org/openstack/magnum-ui)
+* [opendev.org/openstack/magnum-specs](https://opendev.org/openstack/magnum-specs)
+
+**Docs:** https://docs.openstack.org/magnum/latest/
+]
+
+.right-column[
+.center[![Insert graphic here](assets/magnum.png)]
+]
+
+---
+
+# Magnum
+## Deploying COEs on OpenStack
+
+* Allows you to deploy K8s, Docker Swarm and Mesos on OpenStack VM's or Ironic
+  baremetal hosts
+  * With Cinder volumes, integrated SSO, Kuryr (last one in the future)
+* Requires Heat for orchestration
+* *Cluster Template* = COE's flavor
+* *Cluster* = COE's instance
+* (It was *BayModel* and *Bay* back in Mitaka)
+* Supports cluster livecycle, etc. update, scale, upgrade
+
+---
+
+# Magnum
+## Deploying COEs on OpenStack
+
+```
+$ openstack coe cluster template create k8s-cluster-template \
+                           --image fedora-atomic-latest \
+                           --keypair testkey \
+                           --external-network public \
+                           --dns-nameserver 8.8.8.8 \
+                           --flavor m1.small \
+                           --docker-volume-size 5 \
+                           --network-driver flannel \
+                           --coe kubernetes
+
+$ openstack coe cluster create k8s-cluster \
+                      --cluster-template k8s-cluster-template \
+                      --master-count 3 \
+                      --node-count 8
+```
+
+---
+
+# Magnum
+
+```
+$ openstack coe cluster show k8s-cluster
++--------------------+------------------------------------------------------------+
+| Property           | Value                                                      |
++--------------------+------------------------------------------------------------+
+| status             | CREATE_COMPLETE                                            |
+| uuid               | 04952c60-a338-437f-a7e7-d016d1d00e65                       |
+| stack_id           | b7bf72ce-b08e-4768-8201-e63a99346898                       |
+| status_reason      | Stack CREATE completed successfully                        |
+(...)
+| create_timeout     | 60                                                         |
+| coe_version        | v1.2.0                                                     |
+| api_address        | https://192.168.19.86:6443                                 |
+| cluster_template_id| da2825a0-6d09-4208-b39e-b2db666f1118                       |
+| master_addresses   | ['192.168.19.87']                                          |
+| node_count         | 1                                                          |
+| node_addresses     | ['192.168.19.88']                                          |
+| master_count       | 1                                                          |
+| container_version  | 1.9.1                                                      |
+| discovery_url      | https://discovery.etcd.io/3b7fb09733429d16679484673ba3bfd5 |
+| name               | k8s-cluster                                                |
++--------------------+------------------------------------------------------------+
+```
+
+---
+
+# Zun
+## Managing containers through OpenStack
+
+.left-column[
+**Mission:** To provide an OpenStack containers service that integrates with
+various container technologies for managing application containers on
+OpenStack.
+
+**Git:**
+
+* [opendev.org/openstack/zun](https://opendev.org/openstack/zun)
+* [opendev.org/openstack/python-zunclient](https://opendev.org/openstack/python-zunclient)
+* [opendev.org/openstack/zun-tempest-plugin](https://opendev.org/openstack/zun-tempest-plugin)
+* [opendev.org/openstack/zun-ui](https://opendev.org/openstack/zun-ui)
+
+**Docs:** https://docs.openstack.org/zun/latest/
+]
+
+.right-column[
+.center[![Insert graphic here](assets/zun.png)]
+]
+
+---
+
+# Zun
+## Managing containers through OpenStack
+
+* Allows you to create and manage containers from OpenStack API.
+* First-class resources
+  * *containers*
+  * *capsules* - essentially Zun's implementation of K8s Pods.
+
+--
+
+.center[.seventy[![Insert graphic here](assets/zun-architecture.png)]]
+
+---
+
+# Zun
+## Managing containers through OpenStack
+
+* Roadmap:
+  * Run containers on baremetal, VM's and COE's
+  * Support for other container runtimes
+  * Scheduling, monitoring, quotas
+--
+
+* Not on roadmap:
+  * Orchestration (use Heat)
+--
+
+* When to use?
+  * When you want COE that's thightly coupled with OpenStack…?
+
+---
+
+# Zun
+## Nova-Docker
+
+* https://opendev.org/x/nova-docker
+* Nova compute driver that used Docker as runtime.
+* Images come from Glance.
+* Issues:
+  * Nova's not an orchestrator.
+  * Lack of support.
+  * Any COE does it better.
+* Discontinued.
+
+---
+
+# Kuryr
+## Neutron for Docker and K8s
+
+.left-column[
+**Mission:** Bridge between container framework networking and storage models
+to OpenStack networking and storage abstractions.
+
+**Git:**
+
+* [opendev.org/openstack/kuryr](https://opendev.org/openstack/kuryr)
+* [opendev.org/openstack/kuryr-libnetwork](https://opendev.org/openstack/kuryr-libnetwork)
+* [opendev.org/openstack/kuryr-kubernetes](https://opendev.org/openstack/kuryr-kubernetes)
+* [opendev.org/openstack/kuryr-tempest-plugin](https://opendev.org/openstack/kuryr-tempest-plugin)
+
+**Docs:** 
+* https://docs.openstack.org/kuryr/latest/
+* https://docs.openstack.org/kuryr-kubernetes/latest/
+]
+
+.right-column[
+.center[![Insert graphic here](assets/kuryr.png)]
+]
+
+---
+
+# Kuryr
+## Projects
+
+--
+* openstack/kuryr
+  * Docker network plugin
+  * Mostly discontinued
+--
+
+* openstack/kuryr-libnetwork
+  * Docker libnetwork plugin
+  * A bit less discontinued
+--
+
+* **openstack/kuryr-kubernetes**
+  * CNI (Container Network Interface) plugin
+  * Totally developed, supported, etc.
+--
+
+* openstack/fuxi
+  * Docker volume plugin
+  * Retired
+* openstack/fuxi-kubernetes
+  * CSI plugin
+  * Retired
+---
+
+# Kuryr
+## Kuryr-Kubernetes
+
+* Works as CNI plugin that uses Neutron to provide networking to K8s pods.
+* Supports K8s services and ingress using OpenStack Octavia.
+* Can run in pods on K8s cluster it is providing networking for, just as any
+  other CNI plugin.
+* Increases networking performance of K8s deployed on OpenStack.
+
+--
+
+.center[.sixty[![Insert graphic here](assets/multiple-overlays.svg)]]
+
+---
+
+# OpenStack Cloud Provider
+## Bind your Kubernetes to OpenStack it's running on
+
+.left-column[
+**Mission:** This Repository hosts various plugins relavant to OpenStack and
+Kubernetes Integration
+
+**Git:**
+
+* [github.com/kubernetes/cloud-provider-openstack](https://github.com/kubernetes/cloud-provider-openstack)
+
+**Docs:** 
+* https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#openstack
+]
+
+--
+
+.right-column[
+* Features:
+  * Keystone integration
+  * Octavia integration
+    * Services
+    * Ingress (beta)
+    * Note that Octavia fits way better into Ingress model
+  * Cinder integration
+    * Standalone Cinder
+  * Manila integration
+  * Barbican integration
+
+]
+
+---
+
+# OpenStack Cloud Provider
+## Bind your Kubernetes to OpenStack it's running on
+
+Want to know more?
+
+**"Practical aspects of Kubernetes Cloud Provider Integration"** by
+**Michał Jura** 
+
+*Wednesday, 11:00 (second path)*
 
 ---
 
