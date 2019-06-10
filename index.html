@@ -66,8 +66,8 @@ template: agenda_layout
    * Zun
    * Magnum
    * Kuryr
-   * OpenStack Cloud Provider
      * Fuxi
+   * OpenStack Cloud Provider
 
 --
 
@@ -87,13 +87,6 @@ OpenStack, Docker and K8s integration use cases
 ## Paris Summit
 
 --
-
-<iframe width="100%" height="70%" src="https://www.youtube.com/embed/Z47i1KAYxNo?controls=0&amp;start=73" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
----
-
-# OpenStack in 2014
-## Paris Summit
 
 .center[.sixty[![Insert graphic here](assets/paris01.JPG)]]
 
@@ -416,6 +409,7 @@ and flexibly deploy OpenStack and related services on Kubernetes.
 # OpenStack-Helm
 ## OpenStack on K8s
 
+* Initially backed by AT&T
 * Provides Helm charts for OpenStack services, as well as third-party services
   required to run OpenStack (RabbitMQ, MariaDB, etc.)
   * **openstack/openstack-helm** - OpenStack services
@@ -425,32 +419,6 @@ and flexibly deploy OpenStack and related services on Kubernetes.
 * Supports most basic OpenStack projects and some extra
   * e.g. Mistral, Magnum, Congress, Barbican, Senlin
   * no Octavia?
-* Initially backed by AT&T
-
----
-# OpenStack-Helm
-## Helm chart
-
-**values.yaml**
-
-```yaml
-images:
-  tags:
-    db_init: docker.io/openstackhelm/heat:ocata-ubuntu_xenial
-    cinder_db_sync: docker.io/openstackhelm/cinder:ocata-ubuntu_xenial
-```
-```
-  replicas:
-    api: 1
-    volume: 1
-```
-```yaml
-  cinder:
-    DEFAULT:
-      resource_query_filters_file: /etc/cinder/resource_filters.json
-      log_config_append: /etc/cinder/logging.conf
-      use_syslog: false
-```
 
 ---
 
@@ -476,6 +444,31 @@ mdulko:templates/ (master) $ tree
 └── utils
     ├── _ceph_volume_section_name.tpl
 
+```
+---
+
+# OpenStack-Helm
+## Helm chart
+
+**values.yaml**
+
+```yaml
+images:
+  tags:
+    db_init: docker.io/openstackhelm/heat:ocata-ubuntu_xenial
+    cinder_db_sync: docker.io/openstackhelm/cinder:ocata-ubuntu_xenial
+```
+```
+  replicas:
+    api: 1
+    volume: 1
+```
+```yaml
+  cinder:
+    DEFAULT:
+      resource_query_filters_file: /etc/cinder/resource_filters.json
+      log_config_append: /etc/cinder/logging.conf
+      use_syslog: false
 ```
 
 ---
@@ -539,14 +532,14 @@ helm upgrade --install cinder ./cinder \
 ### Stackanetes
 
 * Launched by CoreOS
-* Based on Kolla images, (formerly) Kolla-Mesos and Jinja 2 templates
+* Based on Kolla images, (former) Kolla-Mesos and Jinja 2 templates
 * Showcased at OpenStack Summit Austin, April 2016
 * Second version based on Kubernetes Package Manager (Helm's predecessor)
 * Discontinued, superseded by OpenStack-Helm
 
 ### Kolla-Kubernetes
 
-* Kolla's team approach to deploying OpenStack on K8s using Helm.
+* Kolla's team approach to deploying OpenStack on K8s using Helm
 * Object of a great discussion in the community
 * Discontinued, superseded by OpenStack-Helm
 
@@ -579,7 +572,6 @@ cinder-scheduler.yaml
 template: section_layout
 
 .center[.sixty[![Insert graphic here](assets/k8s-on-openstack.png)]]
-
 
 ---
 
@@ -617,7 +609,7 @@ managing <del>application containers</del> container orchestration engines <del>
 * *Cluster Template* = COE's flavor
 * *Cluster* = COE's instance
 * (It was *BayModel* and *Bay* back in Mitaka)
-* Supports cluster livecycle, etc. update, scale, upgrade
+* Supports cluster lifecycle, etc. update, scale, upgrade
 
 ---
 
@@ -826,17 +818,16 @@ Kubernetes Integration
 --
 
 .right-column[
-* Features:
-  * Keystone integration
-  * Octavia integration
-    * Services
-    * Ingress (beta)
-    * Note that Octavia fits way better into Ingress model
-  * Cinder integration
-    * Standalone Cinder
-  * Manila integration
-  * Barbican integration
-
+**Features:**
+* Keystone integration
+* Octavia integration
+  * Services
+  * Ingress (beta)
+  * Note that Octavia fits way better into Ingress model
+* Cinder integration
+  * Standalone Cinder
+* Manila integration
+* Barbican integration
 ]
 
 ---
